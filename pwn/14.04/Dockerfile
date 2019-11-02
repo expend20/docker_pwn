@@ -15,7 +15,7 @@ RUN git clone https://github.com/pwndbg/pwndbg \
 
 # debug version of libc
 
-RUN git clone --depth=1 --branch $LIBC_TAG https://github.com/bminor/glibc.git 
+RUN git clone --depth=1 --branch $LIBC_TAG https://github.com/bminor/glibc.git
 
 RUN apt-get install gawk gcc-multilib g++-multilib bison -y
 
