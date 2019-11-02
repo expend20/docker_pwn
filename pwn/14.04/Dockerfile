@@ -1,4 +1,5 @@
 FROM ubuntu:14.04
+ENV LIBC_TAG=glibc-2.19
 
 RUN dpkg --add-architecture i386 \
     && apt-get update \
@@ -11,3 +12,35 @@ RUN apt-get install gdb python2.7 python-pip python-dev git libssl-dev libffi-de
 RUN git clone https://github.com/pwndbg/pwndbg \
     && cd pwndbg \
     && ./setup.sh
+
+# debug version of libc
+
+RUN git clone --depth=1 --branch $LIBC_TAG https://github.com/bminor/glibc.git 
+
+RUN apt-get install gawk gcc-multilib g++-multilib bison -y
+
+# 64bit version
+
+RUN mkdir /libc-build \
+    && mkdir /libc-dbg
+
+RUN cd /libc-build \
+    && /glibc/configure --prefix=$HOME/glibc32 \
+    && make -j $(nproc) \
+    && cp /libc-build/libc.so /libc-dbg/libc64.so \
+    && rm -rf *
+
+# 32bit version
+
+RUN cd /libc-build \
+    && /glibc/configure --prefix=$HOME/glibc32 \
+     --host=i686-linux-gnu \
+     --build=i686-linux-gnu \
+     CC="gcc -m32" CXX="g++ -m32" \
+     CFLAGS="-O2 -march=i686" \
+     CXXFLAGS="-O2 -march=i686" \
+    && make -j $(nproc) \
+    && cp /libc-build/libc.so /libc-dbg/libc32.so \
+    && rm -rf *
+
+RUN rm -rf /var/lib/apt/lists/*
